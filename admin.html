@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Ischia Digital</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #3b82f6;
+      --border: rgba(148, 163, 184, 0.25);
+      --danger: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    .login-screen {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+    }
+    .login-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      width: min(100%, 380px);
+    }
+    .login-box h1 { font-size: 1.4rem; margin-bottom: 0.4rem; }
+    .login-box p { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .login-box input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    .login-box input:focus { outline: none; border-color: var(--accent); }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.7rem 1.2rem;
+      border-radius: 999px;
+      border: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+      width: 100%;
+    }
+    .btn:hover { filter: brightness(1.08); }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      width: auto;
+    }
+    .error { color: var(--danger); font-size: 0.85rem; margin-bottom: 0.75rem; display: none; }
+    .dashboard { display: none; max-width: 1000px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+    .dashboard.visible { display: block; }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .header h1 { font-size: 1.5rem; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 600px) { .stats { grid-template-columns: 1fr; } }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+    .stat-card .label { color: var(--muted); font-size: 0.85rem; }
+    .stat-card .value { font-size: 1.8rem; font-weight: 700; margin-top: 0.25rem; }
+    .section { margin-bottom: 2.5rem; }
+    .section h2 {
+      font-size: 1.15rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td {
+      text-align: left;
+      padding: 0.7rem 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    th { color: var(--muted); font-weight: 500; font-size: 0.8rem; }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-new { background: rgba(59,130,246,0.2); color: #93c5fd; }
+    .empty {
+      color: var(--muted);
+      padding: 2rem;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+    .table-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table { font-size: 0.8rem; }
+      th, td { padding: 0.55rem 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-screen" id="loginScreen">
+    <div class="login-box">
+      <h1>Admin Ischia Digital</h1>
+      <p>Inserisci la password per accedere al pannello.</p>
+      <div class="error" id="loginError">Password non corretta</div>
+      <input type="password" id="password" placeholder="Password" onkeydown="if(event.key==='Enter') tryLogin()">
+      <button class="btn" onclick="tryLogin()">Entra</button>
+    </div>
+  </div>
+  <div class="dashboard" id="dashboard">
+    <div class="header">
+      <h1>Pannello Admin</h1>
+      <div style="display:flex;gap:0.6rem;align-items:center">
+        <a href="index.html" class="btn btn-ghost" style="padding:0.5rem 1rem;font-size:0.85rem">← Landing</a>
+        <button class="btn btn-ghost" style="padding:0.5rem 1rem;font-size:0.85rem" onclick="logout()">Esci</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat-card">
+        <div class="label">Visite totali</div>
+        <div class="value" id="statVisits">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Click su “Prenota call”</div>
+        <div class="value" id="statBookings">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Ultime 24h (visite)</div>
+        <div class="value" id="statToday">0</div>
+      </div>
+    </div>
+    <div class="section">
+      <h2>
+        Click su prenotazione (Calendly)
+        <button class="btn btn-ghost" style="padding:0.35rem 0.8rem;font-size:0.8rem" onclick="clearBookings()">Svuota</button>
+      </h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data / Ora</th>
+              <th>Azione</th>
+            </tr>
+          </thead>
+          <tbody id="bookingsBody"></tbody>
+        </table>
+        <div class="empty" id="bookingsEmpty">Nessun click sulla prenotazione ancora.</div>
+      </div>
+    </div>
+    <div class="section">
+      <h2>
+        Visite recenti
+        <button class="btn btn-ghost" style="padding:0.35rem 0.8rem;font-size:0.8rem" onclick="clearVisits()">Svuota</button>
+      </h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data / Ora</th>
+              <th>Referrer</th>
+              <th>Device</th>
+            </tr>
+          </thead>
+          <tbody id="visitsBody"></tbody>
+        </table>
+        <div class="empty" id="visitsEmpty">Nessuna visita registrata.</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const ADMIN_PASSWORD = 'ischia2026';
+    function tryLogin() {
+      const pwd = document.getElementById('password').value;
+      if (pwd === ADMIN_PASSWORD) {
+        sessionStorage.setItem('id_admin', '1');
+        showDashboard();
+      } else {
+        document.getElementById('loginError').style.display = 'block';
+      }
+    }
+    function logout() {
+      sessionStorage.removeItem('id_admin');
+      location.reload();
+    }
+    function showDashboard() {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboard').classList.add('visible');
+      renderData();
+    }
+    function renderData() {
+      const visits = JSON.parse(localStorage.getItem('id_visits') || '[]');
+      const bookings = JSON.parse(localStorage.getItem('id_booking_clicks') || '[]');
+      document.getElementById('statVisits').textContent = visits.length;
+      document.getElementById('statBookings').textContent = bookings.length;
+      const now = Date.now();
+      const dayAgo = now - 24 * 60 * 60 * 1000;
+      const todayCount = visits.filter(v => new Date(v.date).getTime() > dayAgo).length;
+      document.getElementById('statToday').textContent = todayCount;
+      const bBody = document.getElementById('bookingsBody');
+      const bEmpty = document.getElementById('bookingsEmpty');
+      bBody.innerHTML = '';
+      if (bookings.length === 0) {
+        bEmpty.style.display = 'block';
+      } else {
+        bEmpty.style.display = 'none';
+        [...bookings].reverse().forEach(b => {
+          const tr = document.createElement('tr');
+          const d = new Date(b.date);
+          tr.innerHTML = `<td>${d.toLocaleDateString('it-IT')} ${d.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'})}</td><td>Click su “Prenota la call”</td>`;
+          bBody.appendChild(tr);
+        });
+      }
+      const vBody = document.getElementById('visitsBody');
+      const vEmpty = document.getElementById('visitsEmpty');
+      vBody.innerHTML = '';
+      if (visits.length === 0) {
+        vEmpty.style.display = 'block';
+      } else {
+        vEmpty.style.display = 'none';
+        [...visits].reverse().slice(0, 50).forEach(v => {
+          const tr = document.createElement('tr');
+          const d = new Date(v.date);
+          const device = /Mobile|Android|iPhone/i.test(v.userAgent) ? 'Mobile' : 'Desktop';
+          tr.innerHTML = `<td>${d.toLocaleDateString('it-IT')} ${d.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'})}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(v.referrer || 'direct')}</td><td>${device}</td>`;
+          vBody.appendChild(tr);
+        });
+      }
+    }
+    function clearBookings() {
+      if (confirm('Vuoi davvero cancellare tutti i click di prenotazione?')) {
+        localStorage.removeItem('id_booking_clicks');
+        renderData();
+      }
+    }
+    function clearVisits() {
+      if (confirm('Vuoi davvero cancellare tutte le visite?')) {
+        localStorage.removeItem('id_visits');
+        renderData();
+      }
+    }
+    function escapeHtml(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    if (sessionStorage.getItem('id_admin') === '1') showDashboard();
+  </script>
+</body>
+</html>
